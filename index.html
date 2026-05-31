@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pro GPA Calculator</title>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -426,6 +423,62 @@
             main { display: block; }
             .right-panel { margin-top: 2rem; border-top: 2px solid black; padding-top: 2rem; }
         }
+        
+        /* --- Advanced Target View Styles --- */
+        #view-target {
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+            display: none;
+        }
+
+        .target-app-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--surface-color);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .target-header h2 { font-size: 1.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
+        .target-header p { color: var(--text-secondary); font-size: 0.9rem; }
+
+        .bar-wrapper { width: 100%; height: 120px; background-color: var(--bg-color); border-radius: 8px; position: relative; overflow: hidden; display: flex; border: 1px solid var(--border); }
+        .bar-fill { height: 100%; background-color: var(--success); width: 0%; transition: width 0.3s ease, background-color 0.3s ease; }
+        .max-line { position: absolute; right: 0; top: 0; bottom: 0; border-right: 2px dashed var(--text-tertiary); z-index: 10; }
+        .max-label { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: bold; color: var(--text-main); z-index: 10; }
+
+        .x-axis { display: flex; justify-content: space-between; width: 100%; margin-top: 10px; color: var(--text-tertiary); font-size: 12px; position: relative; }
+        .x-axis span { position: relative; }
+        .x-axis span::before { content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); height: 5px; width: 1px; background-color: var(--border); }
+        .scale-label { text-align: right; color: var(--text-tertiary); font-size: 12px; margin-top: 5px; width: 100%; }
+
+        .stats-section { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 20px 0; text-align: center; display: flex; flex-direction: column; gap: 15px; }
+        .stat-group { display: flex; flex-direction: column; gap: 8px; }
+        .stat-label { color: var(--text-secondary); font-size: 14px; }
+        .stat-value { font-size: 24px; font-weight: 700; font-family: monospace; letter-spacing: 1px; }
+
+        .controls-section { display: flex; flex-direction: column; gap: 20px; }
+        .control-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .control-label { font-size: 14px; color: var(--text-main); font-weight: 500; }
+        .control-inputs { display: flex; align-items: center; gap: 15px; }
+
+        input[type="range"] { -webkit-appearance: none; width: 120px; background: transparent; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -6px; }
+        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: var(--border); border-radius: 2px; }
+
+        .value-box { background-color: var(--bg-color); padding: 8px 12px; border-radius: 8px; font-size: 16px; color: var(--text-main); text-align: center; width: 60px; border: 1px solid var(--border); outline: none; font-family: monospace; }
+        .stepper { display: flex; background-color: var(--bg-color); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+        .stepper button { background: transparent; border: none; color: var(--text-main); font-size: 18px; padding: 8px 15px; cursor: pointer; outline: none; }
+        .stepper button:hover { background-color: var(--surface-color); }
+        .stepper input { background: transparent; border: none; border-left: 1px solid var(--border); border-right: 1px solid var(--border); color: var(--text-main); text-align: center; width: 60px; font-size: 16px; font-family: monospace; outline: none; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body>
@@ -436,6 +489,9 @@
             ProGPA
         </div>
         <div class="header-actions">
+            <button class="icon-btn" id="btn-toggle-view" title="Advanced Target Planner" onclick="toggleView()">
+                <i class="fa-solid fa-bullseye"></i>
+            </button>
             <button class="icon-btn" id="btn-print" title="Print / Save PDF" onclick="window.print()">
                 <i class="fa-solid fa-print"></i>
             </button>
@@ -448,7 +504,7 @@
         </div>
     </header>
 
-    <main>
+    <main id="view-calculator">
         <div class="left-panel">
             <div id="semesters-wrapper"></div>
             
@@ -495,9 +551,80 @@
                     </button>
                     <div class="target-result" id="target-result"></div>
                 </div>
+                <button class="btn btn-outline" style="width: 100%; justify-content: center; margin-top: 1rem; border-style: dashed;" onclick="toggleView()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Advanced Planner
+                </button>
             </div>
         </div>
     </main>
+
+    <div id="view-target">
+        <div class="target-app-container">
+            <div class="target-header">
+                <h2><i class="fa-solid fa-map-location-dot"></i> Degree Planner</h2>
+                <p>Calculate the exact average needed across all remaining credits to hit your graduation goal.</p>
+            </div>
+
+            <div class="chart-container">
+                <div class="bar-wrapper">
+                    <div class="bar-fill" id="barFill"></div>
+                    <div class="max-line"></div>
+                    <div class="max-label">MAX 4.0</div>
+                </div>
+                <div class="x-axis">
+                    <span>0.0</span><span>1.0</span><span>2.0</span><span>3.0</span><span>4.0</span>
+                </div>
+                <div class="scale-label">Required Average Scale →</div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stat-group">
+                    <div class="stat-label">Required Average GPA</div>
+                    <div class="stat-value" id="reqGpaText">0.00</div>
+                </div>
+                <div class="stat-group">
+                    <div class="stat-label">Difficulty Status</div>
+                    <div class="stat-value" id="statusText">-</div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="control-row">
+                    <div class="control-label">Target Cumulative GPA</div>
+                    <div class="control-inputs">
+                        <input type="range" id="targetSlider" min="2.0" max="4.0" step="0.1" value="3.0">
+                        <input type="number" class="value-box" id="advTargetInput" value="3.0" step="0.1" max="4.0">
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <div class="control-label">Total Degree Credits</div>
+                    <div class="stepper">
+                        <button onclick="adjustVal('advTotalInput', -1)">−</button>
+                        <input type="number" id="advTotalInput" value="120" min="1">
+                        <button onclick="adjustVal('advTotalInput', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <div class="control-label">Completed Credits</div>
+                    <div class="stepper">
+                        <button onclick="adjustVal('advCompletedInput', -1)">−</button>
+                        <input type="number" id="advCompletedInput" value="0" min="0">
+                        <button onclick="adjustVal('advCompletedInput', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <div class="control-label">Current GPA</div>
+                    <div class="control-inputs">
+                        <input type="range" id="currentSlider" min="0.0" max="4.0" step="0.1" value="0.0">
+                        <input type="number" class="value-box" id="advCurrentInput" value="0.0" step="0.1" max="4.0">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Data & State Management
@@ -897,6 +1024,130 @@
             gpaChartInstance.options.plugins.tooltip.borderColor = gridColor;
             
             gpaChartInstance.update();
+        }
+
+        // --- Advanced Target View Logic ---
+        function toggleView() {
+            const calcView = document.getElementById('view-calculator');
+            const targetView = document.getElementById('view-target');
+            const btnIcon = document.querySelector('#btn-toggle-view i');
+            const logo = document.querySelector('.logo');
+            
+            if (calcView.style.display !== 'none') {
+                calcView.style.display = 'none';
+                targetView.style.display = 'flex';
+                btnIcon.className = 'fa-solid fa-calculator';
+                document.getElementById('btn-toggle-view').title = "Back to Calculator";
+                logo.innerHTML = '<i class="fa-solid fa-bullseye"></i> Target Planner';
+                
+                // Auto-sync data
+                const currentCumGpa = parseFloat(document.getElementById('total-gpa').textContent) || 0;
+                const currentTotalCredits = parseFloat(document.getElementById('total-credits').textContent) || 0;
+                
+                if (currentTotalCredits > 0) {
+                    document.getElementById('advCurrentInput').value = currentCumGpa.toFixed(2);
+                    document.getElementById('currentSlider').value = currentCumGpa.toFixed(2);
+                    document.getElementById('advCompletedInput').value = currentTotalCredits;
+                    
+                    const advTotal = parseFloat(document.getElementById('advTotalInput').value);
+                    if (advTotal <= currentTotalCredits) {
+                        document.getElementById('advTotalInput').value = currentTotalCredits + 30;
+                    }
+                }
+                calculateAdvancedTarget();
+            } else {
+                calcView.style.display = 'grid'; 
+                targetView.style.display = 'none';
+                btnIcon.className = 'fa-solid fa-bullseye';
+                document.getElementById('btn-toggle-view').title = "Advanced Target Planner";
+                logo.innerHTML = '<i class="fa-solid fa-graduation-cap"></i> ProGPA';
+            }
+        }
+
+        const targetSlider = document.getElementById('targetSlider');
+        const advTargetInput = document.getElementById('advTargetInput');
+        const advTotalInput = document.getElementById('advTotalInput');
+        const advCompletedInput = document.getElementById('advCompletedInput');
+        const currentSlider = document.getElementById('currentSlider');
+        const advCurrentInput = document.getElementById('advCurrentInput');
+        
+        const reqGpaText = document.getElementById('reqGpaText');
+        const statusText = document.getElementById('statusText');
+        const barFill = document.getElementById('barFill');
+
+        window.adjustVal = function(id, delta) {
+            const el = document.getElementById(id);
+            let val = parseInt(el.value) + delta;
+            if(val < 0) val = 0;
+            el.value = val;
+            calculateAdvancedTarget();
+        }
+
+        targetSlider.addEventListener('input', (e) => {
+            let val = parseFloat(e.target.value);
+            advTargetInput.value = val % 1 === 0 ? val.toString() : val.toFixed(1);
+            calculateAdvancedTarget();
+        });
+        advTargetInput.addEventListener('input', (e) => {
+            targetSlider.value = e.target.value;
+            calculateAdvancedTarget();
+        });
+
+        currentSlider.addEventListener('input', (e) => {
+            let val = parseFloat(e.target.value);
+            advCurrentInput.value = val % 1 === 0 ? val.toString() : val.toFixed(1);
+            calculateAdvancedTarget();
+        });
+        advCurrentInput.addEventListener('input', (e) => {
+            currentSlider.value = e.target.value;
+            calculateAdvancedTarget();
+        });
+
+        advTotalInput.addEventListener('input', calculateAdvancedTarget);
+        advCompletedInput.addEventListener('input', calculateAdvancedTarget);
+
+        function calculateAdvancedTarget() {
+            const target = parseFloat(advTargetInput.value) || 0;
+            const total = parseFloat(advTotalInput.value) || 0;
+            const completed = parseFloat(advCompletedInput.value) || 0;
+            const current = parseFloat(advCurrentInput.value) || 0;
+
+            const remaining = total - completed;
+
+            if (remaining <= 0) {
+                reqGpaText.innerText = "N/A";
+                statusText.innerText = "Completed";
+                barFill.style.width = "0%";
+                return;
+            }
+
+            let required = (target * total - current * completed) / remaining;
+            reqGpaText.innerText = required.toFixed(2);
+
+            let status = "";
+            let color = "var(--success)"; 
+
+            if (required > 4.0) {
+                status = "Impossible";
+                color = "var(--danger)"; 
+                barFill.style.width = "100%";
+            } else if (required < 0) {
+                status = "Already Achieved";
+                barFill.style.width = "0%";
+            } else {
+                barFill.style.width = (required / 4.0 * 100) + "%";
+                if (required <= 2.5) {
+                    status = "Easy";
+                } else if (required <= 3.5) {
+                    status = "Achievable";
+                } else {
+                    status = "Hard";
+                    color = "#f59e0b"; // orange/yellow warning
+                }
+            }
+
+            statusText.innerText = status;
+            barFill.style.backgroundColor = color;
         }
     </script>
 </body>
